@@ -76,3 +76,4 @@ Use agents for:
 - `references/LIFECYCLE.md`
 - `references/LINT.md`
 - `references/BINDING-LAYER.md`
+- `references/RECORD-DENSITY.md`
