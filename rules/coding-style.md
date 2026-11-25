@@ -2,6 +2,12 @@
 
 Enforce code style standards for ML projects to ensure maintainability and consistency.
 
+## Scope
+
+- Apply these rules to code you write or modify. Do not rewrite existing code to match them in bulk.
+- Research computation code (Fortran, C++, one-off analysis scripts) is outside this rule. Only the Python sections apply to Python code in those projects.
+- The Factory & Registry and Config-Driven Models sections apply only to Hydra-based ML projects. Other Python projects use argparse or plain functions.
+
 ## Core Principles
 
 ### Small File Principle (200-400 lines)
@@ -52,7 +58,7 @@ except FileNotFoundError as e:
 
 ### Type Hints
 
-- All functions must have type hints
+- New public functions and methods must have type hints for arguments and return values
 - Use types from the typing module
 - Use TypeVar for complex types
 
@@ -126,7 +132,7 @@ def train_model(cfg: Config) -> Model:
 
 ### Factory & Registry Pattern
 
-All modules must use factory and registry patterns:
+For Hydra-based ML projects, swappable modules (datasets, models) use factory and registry patterns. Single scripts do not need them:
 
 ```python
 # dataset/__init__.py
@@ -144,7 +150,7 @@ def DatasetFactory(name: str) -> Type[Dataset]:
 
 ### Config-Driven Models
 
-Model `__init__` should only accept a `cfg` parameter:
+In Hydra-based ML projects, model `__init__` should only accept a `cfg` parameter:
 
 ```python
 @register_model('MyModel')
@@ -173,6 +179,24 @@ src/
 └── utils/                   # Shared utilities
 ```
 
+### Research Project Layout
+
+For research computation projects that are not Hydra-based ML projects:
+
+```
+<project>/
+├── pyproject.toml           # uv, ruff, pytest settings
+├── src/                     # Reusable modules
+├── run/
+│   ├── conf/                # Hydra configs (only if the project uses Hydra)
+│   └── pipeline/            # Entry points
+├── tests/
+├── experiments/             # One folder per run: {YYYYMMDD}_{name}/
+├── figures/                 # Final figures: generating script next to the output
+├── data/raw/                # Original data, read-only, source recorded in README
+└── outputs/                 # Temporary results, excluded from git
+```
+
 ## Prohibited Patterns
 
 ❌ **Prohibited:**
@@ -181,9 +205,9 @@ src/
 - Mutable default arguments: `def foo(a=[]):`
 - Global variables (use config instead)
 - Bare except: `except:`
-- Hardcoded hyperparameters (use cfg)
+- Hardcoded experiment settings (use a Hydra config or CLI arguments)
 - Unused imports
-- print() debug statements (use logger)
+- print() debug statements (use logger). Final CLI results may use print
 
 ✅ **Recommended:**
 - Split large files
@@ -200,14 +224,14 @@ src/
 Before committing code, ensure:
 
 ```bash
-# Type checking
-mypy src/
-
-# Code style
+# Code style (required; settings in pyproject.toml)
 ruff check .
 
-# Tests
+# Tests (required when tests/ exists)
 pytest
+
+# Type checking (recommended for new modules)
+mypy src/
 ```
 
 Violations of these rules will be flagged by the code-reviewer agent.
